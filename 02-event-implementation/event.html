@@ -33,6 +33,11 @@
     contents.removeAttribute('hidden');
   }
   document.body.onload = welcome;
+
+  function increment() {
+    document.getElementById('count').innerText++;
+  }
+  document.getElementById('incrementButton').onclick = increment;
 </script>
 </body>
 </html>
