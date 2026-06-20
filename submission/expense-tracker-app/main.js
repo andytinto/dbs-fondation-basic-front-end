@@ -1,281 +1,276 @@
-// State Management
-let transactions = [];
-let editingTransactionId = null;
-let searchQuery = '';
+// Data State
+let listTransaksi = [];
+let idTransaksiEdit = null;
+let kataKunciCari = '';
 
-// DOM Elements
-const transactionForm = document.getElementById('transactionForm');
-const titleInput = document.getElementById('transactionFormTitleInput');
-const amountInput = document.getElementById('transactionFormAmountInput');
-const dateInput = document.getElementById('transactionFormDateInput');
-const typeSelect = document.getElementById('transactionFormTypeSelect');
-const submitButton = document.getElementById('transactionFormSubmitButton');
+// Elemen DOM
+const formInput = document.getElementById('transactionForm');
+const inputKeterangan = document.getElementById('transactionFormTitleInput');
+const inputNominal = document.getElementById('transactionFormAmountInput');
+const inputTanggal = document.getElementById('transactionFormDateInput');
+const selectTipe = document.getElementById('transactionFormTypeSelect');
+const tombolSubmit = document.getElementById('transactionFormSubmitButton');
 
-const searchForm = document.getElementById('searchTransactionForm');
-const searchInput = document.getElementById('searchTransactionFormTitleInput');
+const formCari = document.getElementById('searchTransactionForm');
+const inputCari = document.getElementById('searchTransactionFormTitleInput');
 
-const incomeList = document.getElementById('incomeList');
-const expenseList = document.getElementById('expenseList');
+const wadahPemasukan = document.getElementById('incomeList');
+const wadahPengeluaran = document.getElementById('expenseList');
 
-const balanceDisplay = document.querySelector('.tracker-summary__balance-amount');
-const incomeDisplay = document.querySelector('.tracker-summary__stat-amount--income');
-const expenseDisplay = document.querySelector('.tracker-summary__stat-amount--expense');
+const teksSaldo = document.querySelector('.tracker-summary__balance-amount');
+const teksPemasukan = document.querySelector('.tracker-summary__stat-amount--income');
+const teksPengeluaran = document.querySelector('.tracker-summary__stat-amount--expense');
 
-// Initialize App
-window.addEventListener('DOMContentLoaded', () => {
-  // Load data from localStorage
-  const savedTransactions = localStorage.getItem('transactions');
-  if (savedTransactions) {
-    transactions = JSON.parse(savedTransactions);
+// Inisialisasi awal saat halaman dimuat
+window.addEventListener('DOMContentLoaded', function() {
+  const dataLokal = localStorage.getItem('transactions');
+  if (dataLokal) {
+    listTransaksi = JSON.parse(dataLokal);
   }
 
-  // Initial render
-  document.dispatchEvent(new CustomEvent('transactions-changed'));
+  // Set tanggal default ke hari ini
+  const hariIni = new Date().toISOString().split('T')[0];
+  inputTanggal.value = hariIni;
 
-  // Set default date to today
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.value = today;
+  // Render pertama kali
+  triggerUpdate();
 });
 
-// Save and Dispatch Change Event
-const saveAndDispatch = () => {
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-  document.dispatchEvent(new CustomEvent('transactions-changed'));
-};
+// Mengirim custom event untuk memicu pembaruan UI
+function triggerUpdate() {
+  const event = new CustomEvent('render-app');
+  document.dispatchEvent(event);
+}
 
-// Event Listener for State Changes
-document.addEventListener('transactions-changed', () => {
-  renderDashboard();
-  renderLists();
+// Listener custom event untuk render ulang dan simpan data
+document.addEventListener('render-app', function() {
+  // Simpan data terbaru ke localStorage
+  localStorage.setItem('transactions', JSON.stringify(listTransaksi));
+
+  // Update Tampilan Dashboard
+  updateDashboard();
+
+  // Update Daftar Transaksi
+  updateDaftar();
 });
 
-// Render Dashboard (Balance, Income, Expense)
-const renderDashboard = () => {
-  let totalIncome = 0;
-  let totalExpense = 0;
+// Menghitung & memperbarui dashboard keuangan
+function updateDashboard() {
+  let totalMasuk = 0;
+  let totalKeluar = 0;
 
-  transactions.forEach(t => {
-    if (t.type === 'income') {
-      totalIncome += t.amount;
-    } else if (t.type === 'expense') {
-      totalExpense += t.amount;
+  listTransaksi.forEach(function(transaksi) {
+    if (transaksi.type === 'income') {
+      totalMasuk += transaksi.amount;
+    } else if (transaksi.type === 'expense') {
+      totalKeluar += transaksi.amount;
     }
   });
 
-  const totalBalance = totalIncome - totalExpense;
+  const saldo = totalMasuk - totalKeluar;
 
-  balanceDisplay.textContent = `Rp${totalBalance.toLocaleString('id-ID')}`;
-  incomeDisplay.textContent = `Rp${totalIncome.toLocaleString('id-ID')}`;
-  expenseDisplay.textContent = `Rp${totalExpense.toLocaleString('id-ID')}`;
-};
+  teksSaldo.textContent = `Rp${saldo.toLocaleString('id-ID')}`;
+  teksPemasukan.textContent = `Rp${totalMasuk.toLocaleString('id-ID')}`;
+  teksPengeluaran.textContent = `Rp${totalKeluar.toLocaleString('id-ID')}`;
+}
 
-// Render Transaction Lists
-const renderLists = () => {
-  // Clear lists
-  incomeList.innerHTML = '';
-  expenseList.innerHTML = '';
+// Memperbarui daftar transaksi masuk & keluar di layar
+function updateDaftar() {
+  wadahPemasukan.innerHTML = '';
+  wadahPengeluaran.innerHTML = '';
 
-  // Filter transactions based on search query
-  const filteredTransactions = transactions.filter(t => 
-    t.title.toLowerCase().includes(searchQuery)
-  );
+  // Filter list berdasarkan kata kunci pencarian
+  const dataFiltered = listTransaksi.filter(function(transaksi) {
+    return transaksi.title.toLowerCase().includes(kataKunciCari);
+  });
 
-  filteredTransactions.forEach(transaction => {
-    const item = createTransactionElement(transaction);
+  dataFiltered.forEach(function(transaksi) {
+    const elemenKartu = buatElemenTransaksi(transaksi);
 
-    if (transaction.type === 'income') {
-      incomeList.appendChild(item);
+    if (transaksi.type === 'income') {
+      wadahPemasukan.appendChild(elemenKartu);
     } else {
-      expenseList.appendChild(item);
+      wadahPengeluaran.appendChild(elemenKartu);
     }
   });
-};
+}
 
-// Create HTML Element using document.createElement
-const createTransactionElement = (transaction) => {
-  // Main Container
+// Membuat elemen HTML kartu transaksi sesuai template submission
+function buatElemenTransaksi(transaksi) {
   const item = document.createElement('div');
   item.setAttribute('data-testid', 'transactionItem');
-  item.classList.add('tracker-transaction-item');
+  item.className = 'tracker-transaction-item';
 
-  // Transaction Icon wrapper based on type
-  const icon = document.createElement('div');
-  icon.classList.add('tracker-transaction-item__icon');
-  if (transaction.type === 'income') {
-    icon.classList.add('tracker-transaction-item__icon--income');
-    icon.textContent = '📈';
-  } else {
-    icon.classList.add('tracker-transaction-item__icon--expense');
-    icon.textContent = '📉';
-  }
-  item.appendChild(icon);
+  // Ikon visual tambahan
+  const divIkon = document.createElement('div');
+  divIkon.className = 'tracker-transaction-item__icon ' + 
+    (transaksi.type === 'income' ? 'tracker-transaction-item__icon--income' : 'tracker-transaction-item__icon--expense');
+  divIkon.textContent = transaksi.type === 'income' ? '📈' : '📉';
+  item.appendChild(divIkon);
 
-  // Detail section
+  // Bagian Detail Transaksi
   const detail = document.createElement('div');
-  detail.classList.add('tracker-transaction-item__detail');
+  detail.className = 'tracker-transaction-item__detail';
 
-  const title = document.createElement('h3');
-  title.setAttribute('data-testid', 'transactionItemTitle');
-  title.classList.add('tracker-transaction-item__title');
-  title.textContent = transaction.title;
-  detail.appendChild(title);
+  const judul = document.createElement('h3');
+  judul.setAttribute('data-testid', 'transactionItemTitle');
+  judul.className = 'tracker-transaction-item__title';
+  judul.textContent = transaksi.title;
+  detail.appendChild(judul);
 
-  const date = document.createElement('p');
-  date.setAttribute('data-testid', 'transactionItemDate');
-  date.classList.add('tracker-transaction-item__date');
-  date.textContent = `Tanggal: ${transaction.date}`;
-  detail.appendChild(date);
+  const tgl = document.createElement('p');
+  tgl.setAttribute('data-testid', 'transactionItemDate');
+  tgl.className = 'tracker-transaction-item__date';
+  tgl.textContent = `Tanggal: ${transaksi.date}`;
+  detail.appendChild(tgl);
 
-  const type = document.createElement('p');
-  type.setAttribute('data-testid', 'transactionItemType');
-  type.classList.add('visually-hidden'); // Hidden but present for test runner
-  type.textContent = `Tipe: ${transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}`;
-  detail.appendChild(type);
+  const tipe = document.createElement('p');
+  tipe.setAttribute('data-testid', 'transactionItemType');
+  tipe.className = 'visually-hidden'; // Tersembunyi tetapi wajib ada sesuai test runner
+  tipe.textContent = `Tipe: ${transaksi.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}`;
+  detail.appendChild(tipe);
 
   item.appendChild(detail);
 
-  // Right side (Amount & Buttons)
-  const right = document.createElement('div');
-  right.classList.add('tracker-transaction-item__right');
+  // Bagian Kanan (Nominal & Aksi)
+  const bagianKanan = document.createElement('div');
+  bagianKanan.className = 'tracker-transaction-item__right';
 
-  const amount = document.createElement('p');
-  amount.setAttribute('data-testid', 'transactionItemAmount');
-  amount.classList.add('tracker-transaction-item__amount');
-  if (transaction.type === 'income') {
-    amount.classList.add('tracker-transaction-item__amount--income');
-    amount.textContent = `Nominal: Rp${transaction.amount}`;
-  } else {
-    amount.classList.add('tracker-transaction-item__amount--expense');
-    amount.textContent = `Nominal: Rp${transaction.amount}`;
-  }
-  right.appendChild(amount);
+  const nominal = document.createElement('p');
+  nominal.setAttribute('data-testid', 'transactionItemAmount');
+  nominal.className = 'tracker-transaction-item__amount ' + 
+    (transaksi.type === 'income' ? 'tracker-transaction-item__amount--income' : 'tracker-transaction-item__amount--expense');
+  // Format teks nominal WAJIB persis template test dicoding: Nominal: Rp[angka]
+  nominal.textContent = `Nominal: Rp${transaksi.amount}`;
+  bagianKanan.appendChild(nominal);
 
-  // Action Buttons
-  const actions = document.createElement('div');
-  actions.classList.add('tracker-transaction-item__actions');
+  // Kontainer Tombol Aksi
+  const wadahTombol = document.createElement('div');
+  wadahTombol.className = 'tracker-transaction-item__actions';
 
-  // Edit Type button
-  const editTypeBtn = document.createElement('button');
-  editTypeBtn.setAttribute('data-testid', 'transactionItemEditTypeButton');
-  editTypeBtn.classList.add('tracker-transaction-item__btn');
-  editTypeBtn.textContent = 'Ubah Tipe';
-  editTypeBtn.addEventListener('click', () => {
-    transaction.type = transaction.type === 'income' ? 'expense' : 'income';
-    saveAndDispatch();
-  });
-  actions.appendChild(editTypeBtn);
+  // Tombol Ubah Tipe
+  const btnUbahTipe = document.createElement('button');
+  btnUbahTipe.setAttribute('data-testid', 'transactionItemEditTypeButton');
+  btnUbahTipe.className = 'tracker-transaction-item__btn';
+  btnUbahTipe.textContent = 'Ubah Tipe';
+  btnUbahTipe.onclick = function() {
+    transaksi.type = transaksi.type === 'income' ? 'expense' : 'income';
+    triggerUpdate();
+  };
+  wadahTombol.appendChild(btnUbahTipe);
 
-  // Edit fields button
-  const editBtn = document.createElement('button');
-  editBtn.setAttribute('data-testid', 'transactionItemEditButton');
-  editBtn.classList.add('tracker-transaction-item__btn');
-  editBtn.textContent = 'Edit';
-  editBtn.addEventListener('click', () => {
-    // Fill form fields
-    titleInput.value = transaction.title;
-    amountInput.value = transaction.amount;
-    dateInput.value = transaction.date;
-    typeSelect.value = transaction.type;
+  // Tombol Edit Form
+  const btnEdit = document.createElement('button');
+  btnEdit.className = 'tracker-transaction-item__btn';
+  btnEdit.textContent = 'Edit';
+  btnEdit.onclick = function() {
+    inputKeterangan.value = transaksi.title;
+    inputNominal.value = transaksi.amount;
+    inputTanggal.value = transaksi.date;
+    selectTipe.value = transaksi.type;
 
-    // Set editing ID
-    editingTransactionId = transaction.id;
+    idTransaksiEdit = transaksi.id;
+    tombolSubmit.textContent = 'Perbarui';
+  };
+  wadahTombol.appendChild(btnEdit);
 
-    // Modify submit button text
-    submitButton.textContent = 'Perbarui';
-  });
-  actions.appendChild(editBtn);
+  // Tombol Hapus
+  const btnHapus = document.createElement('button');
+  btnHapus.setAttribute('data-testid', 'transactionItemDeleteButton');
+  btnHapus.className = 'tracker-transaction-item__btn tracker-transaction-item__btn--delete';
+  btnHapus.textContent = 'Hapus';
+  btnHapus.onclick = function() {
+    listTransaksi = listTransaksi.filter(function(t) {
+      return t.id !== transaksi.id;
+    });
+    triggerUpdate();
 
-  // Delete button
-  const deleteBtn = document.createElement('button');
-  deleteBtn.setAttribute('data-testid', 'transactionItemDeleteButton');
-  deleteBtn.classList.add('tracker-transaction-item__btn', 'tracker-transaction-item__btn--delete');
-  deleteBtn.textContent = 'Hapus';
-  deleteBtn.addEventListener('click', () => {
-    transactions = transactions.filter(t => t.id !== transaction.id);
-    saveAndDispatch();
-    if (editingTransactionId === transaction.id) {
-      resetFormMode();
+    if (idTransaksiEdit === transaksi.id) {
+      resetForm();
     }
-  });
-  actions.appendChild(deleteBtn);
+  };
+  wadahTombol.appendChild(btnHapus);
 
-  right.appendChild(actions);
-  item.appendChild(right);
+  bagianKanan.appendChild(wadahTombol);
+  item.appendChild(bagianKanan);
 
   return item;
-};
+}
 
-// Reset form back to 'Add' mode
-const resetFormMode = () => {
-  editingTransactionId = null;
-  submitButton.textContent = 'Simpan';
-  transactionForm.reset();
-  // Set default date to today
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.value = today;
-};
+// Mengembalikan form ke mode tambah
+function resetForm() {
+  idTransaksiEdit = null;
+  tombolSubmit.textContent = 'Simpan';
+  formInput.reset();
 
-// Handle Form Submission
-transactionForm.addEventListener('submit', (e) => {
+  const hariIni = new Date().toISOString().split('T')[0];
+  inputTanggal.value = hariIni;
+}
+
+// Menangani Submit Form Transaksi (Tambah/Edit)
+formInput.addEventListener('submit', function(e) {
   e.preventDefault();
 
-  const title = titleInput.value.trim();
-  const amount = parseInt(amountInput.value, 10);
-  const date = dateInput.value;
-  const type = typeSelect.value;
+  const title = inputKeterangan.value.trim();
+  const amount = parseInt(inputNominal.value, 10);
+  const date = inputTanggal.value;
+  const type = selectTipe.value;
 
-  // Validation
+  // Validasi Input
   if (!title) {
-    alert('Keterangan transaksi tidak boleh kosong!');
+    alert('Judul transaksi tidak boleh kosong!');
     return;
   }
   if (isNaN(amount) || amount < 1) {
-    alert('Nominal uang tidak boleh kosong dan harus minimal Rp1!');
+    alert('Nominal uang tidak valid (minimal Rp1)!');
     return;
   }
   if (!date) {
-    alert('Tanggal transaksi tidak boleh kosong!');
+    alert('Tanggal tidak boleh kosong!');
     return;
   }
 
-  if (editingTransactionId !== null) {
-    // Edit mode
-    const transactionIndex = transactions.findIndex(t => t.id === editingTransactionId);
-    if (transactionIndex > -1) {
-      transactions[transactionIndex] = {
-        ...transactions[transactionIndex],
+  if (idTransaksiEdit !== null) {
+    // Mode Edit
+    const index = listTransaksi.findIndex(function(t) {
+      return t.id === idTransaksiEdit;
+    });
+
+    if (index > -1) {
+      listTransaksi[index] = {
+        ...listTransaksi[index],
         title,
         amount,
         date,
         type
       };
-      saveAndDispatch();
+      triggerUpdate();
     }
-    resetFormMode();
+    resetForm();
   } else {
-    // Add mode
-    const newTransaction = {
+    // Mode Tambah Baru
+    const transaksiBaru = {
       id: +new Date(),
       title,
       amount,
       date,
       type
     };
-    transactions.push(newTransaction);
-    saveAndDispatch();
-    resetFormMode();
+    listTransaksi.push(transaksiBaru);
+    triggerUpdate();
+    resetForm();
   }
 });
 
-// Handle Real-time Search
-searchInput.addEventListener('input', (e) => {
-  searchQuery = e.target.value.trim().toLowerCase();
-  renderLists();
+// Pencarian Real-time saat mengetik kata kunci
+inputCari.addEventListener('input', function(e) {
+  kataKunciCari = e.target.value.trim().toLowerCase();
+  updateDaftar();
 });
 
-// Handle Search Form Submission
-searchForm.addEventListener('submit', (e) => {
+// Menangani submit pada form pencarian
+formCari.addEventListener('submit', function(e) {
   e.preventDefault();
-  searchQuery = searchInput.value.trim().toLowerCase();
-  renderLists();
+  kataKunciCari = inputCari.value.trim().toLowerCase();
+  updateDaftar();
 });

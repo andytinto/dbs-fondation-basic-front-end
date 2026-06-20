@@ -1,17 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg-page: #f8fafc;
+  --bg-page: #f2f6f3;
   --bg-card: #ffffff;
-  --text-dark: #0f172a;
-  --text-muted: #64748b;
-  --accent-blue: #3b82f6;
-  --accent-light: #eff6ff;
-  --color-income: #10b981;
+  --text-dark: #1b2b20;
+  --text-muted: #607266;
+  --accent-blue: #10b981;
+  --accent-light: #e6fdf4;
+  --color-income: #059669;
   --bg-income: #ecfdf5;
-  --color-expense: #f43f5e;
+  --color-expense: #e11d48;
   --bg-expense: #fff1f2;
-  --border-light: #e2e8f0;
+  --border-light: #dbe5de;
   --font-family: "Outfit", sans-serif;
   --card-radius: 20px;
   --card-padding: 24px;
@@ -73,7 +73,7 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   transition: var(--transition-smooth);
 }
 
@@ -82,8 +82,9 @@ body {
 .tracker-form-section__card:hover,
 .tracker-search:hover,
 .tracker-transaction-list:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  transform: translateY(-3px);
+  border-color: #a3c2b0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
 }
 
 .tracker-header {
@@ -91,12 +92,15 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1.5rem;
 }
 
 .tracker-header__title {
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.03em;
+  color: var(--text-dark);
 }
 
 .tracker-header__user {
@@ -116,6 +120,10 @@ body {
   color: var(--text-dark);
 }
 
+.tracker-header__greeting strong {
+  color: var(--color-income);
+}
+
 .tracker-header__date {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -126,13 +134,12 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: var(--bg-card);
+  background-color: #ffffff;
   border: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
 .tracker-summary {
@@ -161,9 +168,9 @@ body {
   position: absolute;
   top: -50%;
   right: -30%;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -224,7 +231,7 @@ body {
   padding: 0.85rem 1rem;
   border-radius: 12px;
   border: 1px solid var(--border-light);
-  background: #f8fafc;
+  background: #f8faf9;
   font-family: inherit;
   font-size: 0.95rem;
   color: var(--text-dark);
@@ -232,10 +239,14 @@ body {
   transition: var(--transition-smooth);
 }
 
+.tracker-form__input::placeholder {
+  color: #8fa095;
+}
+
 .tracker-form__input:focus {
   border-color: var(--accent-blue);
-  background: var(--bg-card);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
 }
 
 .tracker-form__submit {
@@ -256,9 +267,9 @@ body {
 }
 
 .tracker-form__submit:hover {
-  background: var(--accent-blue);
+  background: var(--color-income);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .tracker-form__submit:active {
@@ -282,11 +293,12 @@ body {
 
 .tracker-search__form .tracker-form__input {
   flex: 1;
-  background: #f8fafc;
+  background: #f8faf9;
 }
 
 .tracker-search__submit {
-  background: var(--bg-page);
+  background: #ffffff;
+  color: var(--text-dark);
   border: 1px solid var(--border-light);
   padding: 0 1.5rem;
   height: 48px;
@@ -298,8 +310,8 @@ body {
 }
 
 .tracker-search__submit:hover {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
+  background: #eaf1ed;
+  border-color: #a3c2b0;
 }
 
 .tracker-history__grid {
@@ -316,7 +328,7 @@ body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
-  border-bottom: 2px solid var(--bg-page);
+  border-bottom: 2px solid var(--border-light);
   padding-bottom: 0.5rem;
 }
 
@@ -347,9 +359,9 @@ body {
 }
 
 .tracker-transaction-item:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transform: translateX(2px);
+  border-color: #a3c2b0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transform: translateX(3px);
 }
 
 .tracker-transaction-item__icon {
@@ -422,7 +434,7 @@ body {
 }
 
 .tracker-transaction-item__btn {
-  background: var(--bg-page);
+  background: #f8faf9;
   border: 1px solid var(--border-light);
   padding: 0.3rem 0.6rem;
   font-size: 0.75rem;
@@ -452,6 +464,8 @@ body {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 1rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1.5rem;
 }
 
 /* RESPONSIVE LAYOUT */
