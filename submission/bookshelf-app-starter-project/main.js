@@ -1,9 +1,13 @@
 const storageKey = 'STORAGE_KEY';
 const submitAction = document.getElementById('bookForm'); 
 const searchButton = document.getElementById('searchSubmit'); 
+const trashButton = document.createElement('button');
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (searchButton) {
+  if (checkForStorage()) {
+		renderBookList();
+  }
+  
     searchButton.addEventListener('click', function(event) {
 		event.preventDefault();
 
@@ -26,21 +30,25 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("Element 'searchBookTitle' not found in the DOM.");
       }
     });
-  } else {
-	 if (checkForStorage()) {
+});
+
+trashButton.addEventListener('click', function() {
+	if (checkForStorage()) {
+		localStorage.removeItem(storageKey);
 		renderBookList();
 	}
-  }
 });
 
 submitAction.addEventListener('submit', function(event) {
 	event.preventDefault(); // Prevent the default form submission (page reload)
 
+	const bookId = generateId();
 	const inputTitle = document.getElementById('bookFormTitle').value;
 	const inputAuthor = document.getElementById('bookFormAuthor').value;
 	const inputYear = document.getElementById('bookFormYear').value;
     const inputIsComplete = document.getElementById('bookFormIsComplete').checked;
 	const newUserData = {
+		id: bookId,
 		title: inputTitle,
 		author: inputAuthor,
 		year: inputYear,
@@ -52,6 +60,10 @@ submitAction.addEventListener('submit', function(event) {
 
 function checkForStorage() {
 	return typeof(Storage) !== 'undefined';
+}
+
+function generateId() {
+	return Date.now();
 }
 
 function putBookList(data) {
